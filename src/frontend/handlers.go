@@ -58,6 +58,17 @@ var (
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
+	if fe.delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+		begin := time.Now()
+		for {
+			if time.Since(begin) > time.Duration(fe.delay)*time.Microsecond {
+				break
+			}
+		}
+		defer runtime.UnlockOSThread()
+	}
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")
 	currencies, err := fe.getCurrencies(r.Context())
@@ -143,17 +154,6 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 }
 
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
-	if fe.delay >= 0 {
-		// Adding delay `Delay` in microseconds
-		runtime.LockOSThread()
-		begin := time.Now()
-		for {
-			if time.Since(begin) > time.Duration(fe.delay)*time.Microsecond {
-				break
-			}
-		}
-		defer runtime.UnlockOSThread()
-	}
 
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	id := mux.Vars(r)["id"]
