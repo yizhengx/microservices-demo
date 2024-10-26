@@ -42,6 +42,18 @@ func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Hea
 func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProductsResponse, error) {
 	time.Sleep(extraLatency)
 
+	if p.Delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+		begin := time.Now()
+		for {
+			if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
+				break
+			}
+		}
+		defer runtime.UnlockOSThread()
+	}
+
 	return &pb.ListProductsResponse{Products: p.parseCatalog()}, nil
 }
 
