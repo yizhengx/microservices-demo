@@ -60,7 +60,7 @@ var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	if fe.delay >= 0 {
 		// Adding delay `Delay` in microseconds
-		log.Infof("Adding delay of %d microseconds", fe.delay)
+		// log.Infof("Adding delay of %d microseconds", fe.delay)
 		runtime.LockOSThread()
 		begin := time.Now()
 		for {
@@ -68,7 +68,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		defer runtime.UnlockOSThread()
+		runtime.UnlockOSThread()
 	}
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")
