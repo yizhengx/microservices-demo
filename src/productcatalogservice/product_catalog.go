@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"runtime"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 
 type productCatalog struct {
 	catalog pb.ListProductsResponse
+	Delay   int
 }
 
 func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -45,6 +47,18 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
 	time.Sleep(extraLatency)
+
+	if p.Delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+		begin := time.Now()
+		for {
+			if time.Since(begin) > time.Duration(s.Delay)*time.Microsecond {
+				break
+			}
+		}
+		defer runtime.UnlockOSThread()
+	}
 
 	var found *pb.Product
 	for i := 0; i < len(p.parseCatalog()); i++ {

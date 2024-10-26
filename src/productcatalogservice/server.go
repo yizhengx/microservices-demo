@@ -21,6 +21,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -114,6 +116,22 @@ func main() {
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
+
+	// Retrieve the value of the environment variable "MAXPROCS"
+	maxProcs := os.Getenv("MAXPROCS")
+	if maxProcs == "" {
+		log.Infof().Msg("MAXPROCS is not set or is empty")
+	} else {
+		// Convert the value to an integer
+		maxProcsInt, err := strconv.Atoi(maxProcs)
+		if err != nil {
+			log.Infof().Msgf("Error converting MAXPROCS to integer: %v\n", err)
+		} else {
+			log.Infof().Msgf("MAXPROCS as integer: %d\n", maxProcsInt)
+			runtime.GOMAXPROCS(maxProcsInt)
+		}
+	}
+
 	log.Infof("starting grpc server at :%s", port)
 	run(port)
 	select {}
@@ -134,7 +152,23 @@ func run(port string) string {
 		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()))
 
-	svc := &productCatalog{}
+	// Retrieve the value of the environment variable "MY_ENV_VAR"
+	value := os.Getenv("DELAY")
+	intValue := -1
+	if value != "" {
+		// Convert the value to an integer
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			intValue = -1
+		} else {
+			intValue = val
+		}
+	}
+	log.Infof("DELAY: %d", intValue)
+
+	svc := &productCatalog{
+		Delay: intValue,
+	}
 	err = loadCatalog(&svc.catalog)
 	if err != nil {
 		log.Warnf("could not parse product catalog")
