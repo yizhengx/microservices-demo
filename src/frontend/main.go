@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
+	"strconv"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -104,6 +106,37 @@ func main() {
 	log.Out = os.Stdout
 
 	svc := new(frontendServer)
+
+	// Retrieve the value of the environment variable "MAXPROCS"
+	maxProcs := os.Getenv("MAXPROCS")
+	if maxProcs == "" {
+		log.Infof("MAXPROCS is not set or is empty")
+	} else {
+		// Convert the value to an integer
+		maxProcsInt, err := strconv.Atoi(maxProcs)
+		if err != nil {
+			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
+		} else {
+			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
+			runtime.GOMAXPROCS(maxProcsInt)
+		}
+	}
+
+	// Retrieve the value of the environment variable "MY_ENV_VAR"
+	value := os.Getenv("DELAY")
+	intValue := -1
+	if value != "" {
+		// Convert the value to an integer
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			intValue = -1
+		} else {
+			intValue = val
+		}
+	}
+	log.Infof("DELAY: %d", intValue)
+
+	svc.delay = intValue
 
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
