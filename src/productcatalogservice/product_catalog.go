@@ -53,7 +53,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		runtime.LockOSThread()
 		begin := time.Now()
 		for {
-			if time.Since(begin) > time.Duration(s.Delay)*time.Microsecond {
+			if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
 				break
 			}
 		}
