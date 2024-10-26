@@ -120,7 +120,7 @@ func main() {
 	// Retrieve the value of the environment variable "MAXPROCS"
 	maxProcs := os.Getenv("MAXPROCS")
 	if maxProcs == "" {
-		log.Infof().Msg("MAXPROCS is not set or is empty")
+		log.Infof("MAXPROCS is not set or is empty")
 	} else {
 		// Convert the value to an integer
 		maxProcsInt, err := strconv.Atoi(maxProcs)
