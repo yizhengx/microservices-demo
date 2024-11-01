@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"runtime"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 
 	if p.Delay >= 0 {
 		// Adding delay `Delay` in microseconds
-		// runtime.LockOSThread()
+		runtime.LockOSThread()
 		// begin := time.Now()
 		// for {
 		// 	if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
@@ -66,7 +67,7 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 		for ThreadCPUTime() < target {
 		}
 
-		// runtime.UnlockOSThread()
+		runtime.UnlockOSThread()
 		// defer runtime.UnlockOSThread()
 	}
 
@@ -78,7 +79,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 
 	if p.Delay >= 0 {
 		// Adding delay `Delay` in microseconds
-		// runtime.LockOSThread()
+		runtime.LockOSThread()
 		// begin := time.Now()
 		// for {
 		// 	if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
@@ -92,7 +93,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		for ThreadCPUTime() < target {
 		}
 
-		// runtime.UnlockOSThread()
+		runtime.UnlockOSThread()
 		// defer runtime.UnlockOSThread()
 	}
 
