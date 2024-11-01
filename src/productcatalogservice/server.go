@@ -21,7 +21,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
 	"strconv"
 	"sync"
 	"syscall"
@@ -128,7 +127,7 @@ func main() {
 			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
 		} else {
 			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
-			runtime.GOMAXPROCS(maxProcsInt)
+			// runtime.GOMAXPROCS(maxProcsInt)
 		}
 	}
 
