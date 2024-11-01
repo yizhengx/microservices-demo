@@ -51,7 +51,8 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 				break
 			}
 		}
-		defer runtime.UnlockOSThread()
+		runtime.UnlockOSThread()
+		// defer runtime.UnlockOSThread()
 	}
 
 	return &pb.ListProductsResponse{Products: p.parseCatalog()}, nil
@@ -69,7 +70,8 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 				break
 			}
 		}
-		defer runtime.UnlockOSThread()
+		runtime.UnlockOSThread()
+		// defer runtime.UnlockOSThread()
 	}
 
 	var found *pb.Product
