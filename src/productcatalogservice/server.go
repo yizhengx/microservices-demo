@@ -23,10 +23,14 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -36,6 +40,7 @@ import (
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/sirupsen/logrus"
+
 	//  "go.opencensus.io/exporter/jaeger"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
@@ -54,7 +59,15 @@ var (
 	port = "3550"
 
 	reloadCatalog bool
+	delay         int
 )
+
+func ThreadCPUTime() int64 {
+	time := unix.Timespec{}
+	unix.ClockGettime(unix.CLOCK_THREAD_CPUTIME_ID, &time)
+
+	return time.Nano()
+}
 
 func init() {
 	log = logrus.New()
@@ -102,6 +115,22 @@ func main() {
 	} else {
 		extraLatency = time.Duration(0)
 	}
+
+	// set injected delay
+	// Retrieve the value of the environment variable "MY_ENV_VAR"
+	value := os.Getenv("DELAY")
+	intValue := -1
+	if value != "" {
+		// Convert the value to an integer
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			intValue = -1
+		} else {
+			intValue = val
+		}
+	}
+	delay = intValue
+	log.Infof("DELAY: %d", delay)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGUSR1, syscall.SIGUSR2)
@@ -267,11 +296,35 @@ func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Hea
 }
 
 func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProductsResponse, error) {
+	if delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		start := ThreadCPUTime()
+		target := start + int64(delay*1000.0)
+
+		for ThreadCPUTime() < target {
+		}
+
+	}
 	time.Sleep(extraLatency)
 	return &pb.ListProductsResponse{Products: parseCatalog()}, nil
 }
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
+	if delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		start := ThreadCPUTime()
+		target := start + int64(delay*1000.0)
+
+		for ThreadCPUTime() < target {
+		}
+
+	}
 	time.Sleep(extraLatency)
 	var found *pb.Product
 	for i := 0; i < len(parseCatalog()); i++ {
