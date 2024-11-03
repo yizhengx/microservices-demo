@@ -80,13 +80,14 @@ class UserBehavior(TaskSet):
     def on_start(self):
         index(self)
 
-    tasks = {index: 1,
-        setCurrency: 2,
-        browseProduct: 10,
-        addToCart: 2,
-        viewCart: 3,
-        checkout: 1}
+    # tasks = {index: 1,
+    #     setCurrency: 2,
+    #     browseProduct: 10,
+    #     addToCart: 2,
+    #     viewCart: 3,
+    #     checkout: 1}
+    tasks = {browseProduct: 1}    
 
 class WebsiteUser(FastHttpUser):
     tasks = [UserBehavior]
-    wait_time = between(1, 10)
+    wait_time = 0
