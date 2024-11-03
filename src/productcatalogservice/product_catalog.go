@@ -20,11 +20,20 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 )
+
+func ThreadCPUTime() int64 {
+	time := unix.Timespec{}
+	unix.ClockGettime(unix.CLOCK_THREAD_CPUTIME_ID, &time)
+
+	return time.Nano()
+}
 
 type productCatalog struct {
 	catalog pb.ListProductsResponse
@@ -45,12 +54,19 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 	if p.Delay >= 0 {
 		// Adding delay `Delay` in microseconds
 		runtime.LockOSThread()
-		begin := time.Now()
-		for {
-			if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
-				break
-			}
+		// begin := time.Now()
+		// for {
+		// 	if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
+		// 		break
+		// 	}
+		// }
+
+		start := ThreadCPUTime()
+		target := start + int64(p.Delay*1000.0)
+
+		for ThreadCPUTime() < target {
 		}
+
 		runtime.UnlockOSThread()
 		// defer runtime.UnlockOSThread()
 	}
@@ -64,12 +80,19 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 	if p.Delay >= 0 {
 		// Adding delay `Delay` in microseconds
 		runtime.LockOSThread()
-		begin := time.Now()
-		for {
-			if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
-				break
-			}
+		// begin := time.Now()
+		// for {
+		// 	if time.Since(begin) > time.Duration(p.Delay)*time.Microsecond {
+		// 		break
+		// 	}
+		// }
+
+		start := ThreadCPUTime()
+		target := start + int64(p.Delay*1000.0)
+
+		for ThreadCPUTime() < target {
 		}
+
 		runtime.UnlockOSThread()
 		// defer runtime.UnlockOSThread()
 	}
