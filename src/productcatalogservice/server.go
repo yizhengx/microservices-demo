@@ -299,13 +299,14 @@ func (p *productCatalog) ListProducts(context.Context, *pb.Empty) (*pb.ListProdu
 	if delay >= 0 {
 		// Adding delay `Delay` in microseconds
 		runtime.LockOSThread()
-		defer runtime.UnlockOSThread()
 
 		start := ThreadCPUTime()
 		target := start + int64(delay*1000.0)
 
 		for ThreadCPUTime() < target {
 		}
+
+		runtime.UnlockOSThread()
 
 	}
 	time.Sleep(extraLatency)
@@ -316,13 +317,14 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 	if delay >= 0 {
 		// Adding delay `Delay` in microseconds
 		runtime.LockOSThread()
-		defer runtime.UnlockOSThread()
 
 		start := ThreadCPUTime()
 		target := start + int64(delay*1000.0)
 
 		for ThreadCPUTime() < target {
 		}
+
+		runtime.UnlockOSThread()
 
 	}
 	time.Sleep(extraLatency)
