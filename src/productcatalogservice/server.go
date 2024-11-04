@@ -127,8 +127,8 @@ func main() {
 		if err != nil {
 			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
 		} else {
-			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
 			runtime.GOMAXPROCS(maxProcsInt)
+			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
 		}
 	}
 
