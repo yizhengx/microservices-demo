@@ -1,1 +1,1 @@
-sudo docker build -t yizhengx/online-boutique:v0.10.1-product-tt-lnd-m . --push
+sudo docker build -t yizhengx/online-boutique:v0.10.1-product-tt-lnd-m-logging . --push

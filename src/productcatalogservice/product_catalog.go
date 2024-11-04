@@ -38,6 +38,7 @@ func ThreadCPUTime() int64 {
 type productCatalog struct {
 	catalog pb.ListProductsResponse
 	Delay   int
+	arr     chan Pair
 }
 
 func (p *productCatalog) Check(ctx context.Context, req *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
@@ -92,6 +93,8 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 
 		for ThreadCPUTime() < target {
 		}
+
+		p.arr <- Pair{start, ThreadCPUTime()}
 
 		runtime.UnlockOSThread()
 		// defer runtime.UnlockOSThread()

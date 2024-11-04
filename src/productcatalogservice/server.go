@@ -52,6 +52,11 @@ var (
 	reloadCatalog bool
 )
 
+type Pair struct {
+	start int64
+	end   int64
+}
+
 func init() {
 	log = logrus.New()
 	log.Formatter = &logrus.JSONFormatter{
@@ -168,6 +173,7 @@ func run(port string) string {
 
 	svc := &productCatalog{
 		Delay: intValue,
+		arr:   make(chan Pair, 1000),
 	}
 	err = loadCatalog(&svc.catalog)
 	if err != nil {
@@ -177,6 +183,18 @@ func run(port string) string {
 	pb.RegisterProductCatalogServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)
 	go srv.Serve(listener)
+
+	go func() {
+		for {
+			if len(svc.arr) == cap(svc.arr) {
+				for i := 0; i < len(svc.arr); i++ {
+					pair := <-svc.arr
+					log.Infof("start: %d, end: %d, diff: %d", pair.start, pair.end, pair.end-pair.start)
+				}
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
 
 	return listener.Addr().String()
 }
