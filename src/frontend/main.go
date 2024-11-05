@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
+	"strconv"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -78,6 +80,8 @@ type frontendServer struct {
 
 	adSvcAddr string
 	adSvcConn *grpc.ClientConn
+
+	delay int
 }
 
 func main() {
@@ -108,12 +112,43 @@ func main() {
 		log.Info("Profiling disabled.")
 	}
 
+	// Retrieve the value of the environment variable "MY_ENV_VAR"
+	value := os.Getenv("DELAY")
+	intValue := -1
+	if value != "" {
+		// Convert the value to an integer
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			intValue = -1
+		} else {
+			intValue = val
+		}
+	}
+
+	log.Infof("DELAY: %d", intValue)
+
+	// Retrieve the value of the environment variable "MAXPROCS"
+	maxProcs := os.Getenv("MAXPROCS")
+	if maxProcs == "" {
+		log.Infof("MAXPROCS is not set or is empty")
+	} else {
+		// Convert the value to an integer
+		maxProcsInt, err := strconv.Atoi(maxProcs)
+		if err != nil {
+			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
+		} else {
+			runtime.GOMAXPROCS(maxProcsInt)
+			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
+		}
+	}
+
 	srvPort := port
 	if os.Getenv("PORT") != "" {
 		srvPort = os.Getenv("PORT")
 	}
 	addr := os.Getenv("LISTEN_ADDR")
 	svc := new(frontendServer)
+	svc.delay = intValue
 	mustMapEnv(&svc.productCatalogSvcAddr, "PRODUCT_CATALOG_SERVICE_ADDR")
 	mustMapEnv(&svc.currencySvcAddr, "CURRENCY_SERVICE_ADDR")
 	mustMapEnv(&svc.cartSvcAddr, "CART_SERVICE_ADDR")
