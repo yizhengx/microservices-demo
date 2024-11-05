@@ -132,6 +132,21 @@ func main() {
 	delay = intValue
 	log.Infof("DELAY: %d", delay)
 
+	// Retrieve the value of the environment variable "MAXPROCS"
+	maxProcs := os.Getenv("MAXPROCS")
+	if maxProcs == "" {
+		log.Infof("MAXPROCS is not set or is empty")
+	} else {
+		// Convert the value to an integer
+		maxProcsInt, err := strconv.Atoi(maxProcs)
+		if err != nil {
+			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
+		} else {
+			runtime.GOMAXPROCS(maxProcsInt)
+			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
+		}
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGUSR1, syscall.SIGUSR2)
 	go func() {
