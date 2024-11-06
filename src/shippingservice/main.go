@@ -18,7 +18,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"runtime"
+	"strconv"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/exporter/jaeger"
@@ -41,7 +45,17 @@ const (
 	defaultPort = "50051"
 )
 
-var log *logrus.Logger
+var (
+	log   *logrus.Logger
+	delay int
+)
+
+func ThreadCPUTime() int64 {
+	time := unix.Timespec{}
+	unix.ClockGettime(unix.CLOCK_THREAD_CPUTIME_ID, &time)
+
+	return time.Nano()
+}
 
 func init() {
 	log = logrus.New()
@@ -70,6 +84,37 @@ func main() {
 		go initProfiling("shippingservice", "1.0.0")
 	} else {
 		log.Info("Profiling disabled.")
+	}
+
+	// set injected delay
+	// Retrieve the value of the environment variable "MY_ENV_VAR"
+	value := os.Getenv("DELAY")
+	intValue := -1
+	if value != "" {
+		// Convert the value to an integer
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			intValue = -1
+		} else {
+			intValue = val
+		}
+	}
+	delay = intValue
+	log.Infof("DELAY: %d", delay)
+
+	// Retrieve the value of the environment variable "MAXPROCS"
+	maxProcs := os.Getenv("MAXPROCS")
+	if maxProcs == "" {
+		log.Infof("MAXPROCS is not set or is empty")
+	} else {
+		// Convert the value to an integer
+		maxProcsInt, err := strconv.Atoi(maxProcs)
+		if err != nil {
+			log.Infof("Error converting MAXPROCS to integer: %v\n", err)
+		} else {
+			runtime.GOMAXPROCS(maxProcsInt)
+			log.Infof("MAXPROCS as integer: %d\n", maxProcsInt)
+		}
 	}
 
 	port := defaultPort
@@ -118,6 +163,19 @@ func (s *server) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_Watc
 // GetQuote produces a shipping quote (cost) in USD.
 func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQuoteResponse, error) {
 	log.Info("[GetQuote] received request")
+	if delay >= 0 {
+		// Adding delay `Delay` in microseconds
+		runtime.LockOSThread()
+
+		start := ThreadCPUTime()
+		target := start + int64(delay*1000.0)
+
+		for ThreadCPUTime() < target {
+		}
+
+		runtime.UnlockOSThread()
+
+	}
 	defer log.Info("[GetQuote] completed request")
 
 	// 1. Generate a quote based on the total number of items to be shipped.
